@@ -2,6 +2,7 @@ const User = require("../Model/userModel")
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
 require("dotenv").config()
+const cloudinary = require("../Middlewares/cloudinary")
 
 
 const securePassword = async(password)=>{
@@ -84,11 +85,10 @@ const addProfileImage = async (req, res) => {
         console.log("opjphiph");
       const id = req.body.userId;
       const image = req.file.filename;
-      
-      // Use async/await for the update operation
+      const profileImage = await cloudinary.uploader.upload(image, {folder: "profile"})
       const updatedUser = await User.findOneAndUpdate(
         { _id: id },
-        { $set: { image: image } },
+        { $set: { image: profileImage.secure_url } },
         { new: true }
       );
   console.log(updatedUser+"uuuuu");
