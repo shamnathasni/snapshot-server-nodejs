@@ -11,7 +11,12 @@ dbConnection()
 
 App.use(express.json())
 App.use(express.urlencoded({extended:true}))
-App.use(CORS())
+App.use(
+    CORS({
+      origin: "http://localhost:5173",  // <-- Specify the allowed origin
+      credentials: true,  // <-- Enable credentials (cookies, authorization headers, etc.)
+    })
+  );
 
 const userRoute = require("./Routes/userRoute")
 App.use("/",userRoute)
