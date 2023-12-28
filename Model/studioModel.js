@@ -4,9 +4,10 @@ const mongoose = require("mongoose")
         type:String,
         required:true
     },
-    vendorId:[{
-        type:mongoose.Schema.Types.ObjectId,ref:"Vendor"
-    }],
+    vendorId:{
+        type:String,
+        required:true
+    },
     city:{
         type:String,
         required:true
@@ -15,10 +16,6 @@ const mongoose = require("mongoose")
         type:String,
         required:true
     },
-    category:{
-       type:String,
-       required:true 
-    },
     coverImage:{
         type:String,
         default:""
@@ -26,7 +23,12 @@ const mongoose = require("mongoose")
     galleryImage:{
         type:String,
         default:""
-    }
+    },
+    package:[{
+        type:mongoose.Types.ObjectId,
+        ref: 'Package',
+    }]
+    
  })
 
  const studio = mongoose.model("Studio", studioSchema);

@@ -12,5 +12,7 @@ vendorRoute.post('/profileImage',uploadOptions.single('image'),vendorController.
 vendorRoute.get("/studio",vendorController.vendorStudio)
 vendorRoute.post("/studioform",uploadOptions.array('image'),vendorController.postStudioForm)
 vendorRoute.get("/vendorcategory",vendorController.postvendorCategory)
+vendorRoute.get("/packageList",vendorController.getPackageList)
+vendorRoute.post("/addPackage",vendorController.postaddPackage)
 
 module.exports = vendorRoute

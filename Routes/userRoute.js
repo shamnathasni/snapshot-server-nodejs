@@ -12,5 +12,10 @@ const { uploadOptions } = require("../Config/multer")
  userRoute.post('/profileImage',uploadOptions.single('image'),userController.addProfileImage)
 
  userRoute.get('/categorylist',userController.getCategoryList)
+ userRoute.get('/studiolist',userController.getStudioList)
+ userRoute.get('/singleStudio',userController.getSinglStudio)
+
+ userRoute.post("/bookingData",userController.postBooking)
 
  module.exports = userRoute
+ 

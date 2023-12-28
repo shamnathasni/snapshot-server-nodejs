@@ -5,6 +5,7 @@ const vendor = require("../Model/vendorModel");
 const Studio = require("../Model/studioModel");
 const Category = require("../Model/categoryModel");
 const subcategory = require("../Model/subCategory");
+const Package = require("../Model/packageModel");
 require("dotenv").config();
 
 const securePassword = async (password) => {
@@ -19,61 +20,60 @@ const securePassword = async (password) => {
 const vendorRegister = async (req, res) => {
   try {
     const { name, number, email, password } = req.body;
-    console.log(req.body + "body");
+
     const sPassword = await securePassword(password); // Wait for the hashed password
     const emailExist = await Vendor.findOne({ email: email });
-    console.log(emailExist + "email");
 
     if (emailExist) {
-      res.json({ alert: "email already exists", status: false });
-    } else {
-      const vendor = new Vendor({
-        name,
-        number,
-        email,
-        password: sPassword,
-        is_verified: true,
-      });
-
-      const newVendor = await vendor.save(); // Wait for the save operation
-      console.log(newVendor + "newVendor");
-      if (newVendor) {
-        const token = jwt.sign(
-          { vendorId: newVendor._id },
-          process.env.VENDOR_SECRET_KEY,
-          {
-            expiresIn: "1h",
-          }
-        );
-        res.json({
-          newVendor,
-          alert: "Welcome, Vendor! You have successfully signed up.",
-          status: true,
-          token,
-        });
-      } else {
-        res.json({ alert: "registration failed", status: false });
-      }
+      return res.json({ alert: "Email already exists", status: false });
     }
+
+    const vendor = new Vendor({
+      name,
+      number,
+      email,
+      password: sPassword,
+      is_verified: true,
+    });
+
+    const newVendor = await vendor.save(); // Wait for the save operation
+
+    if (newVendor) {
+      const token = jwt.sign(
+        { vendorId: newVendor._id },
+        process.env.VENDOR_SECRET_KEY
+      );
+      return res.json({
+        newVendor,
+        alert: "Welcome, Vendor! You have successfully signed up.",
+        status: true,
+        token,
+      });
+    }
+
+    return res.json({ alert: "Registration failed", status: false });
   } catch (error) {
     console.log(error.message);
-
-    res.status(500).json({ alert: "internal server error", status: false });
+    return res
+      .status(500)
+      .json({ alert: "Internal server error", status: false });
   }
 };
 
 const vendorLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log(req.body + "body");
-    const emailExist = await Vendor.findOne({ email: email });
+
+    const emailExist = await Vendor.findOne({
+      email: email,
+      is_verified: true,
+    });
     if (emailExist) {
       const access = await bcrypt.compare(password, emailExist.password);
       if (access) {
         const token = jwt.sign(
           { vendorId: emailExist._id },
-          process.env.VENDOR_SECRET_KEY,
-          { expiresIn: "1h" }
+          process.env.VENDOR_SECRET_KEY
         );
 
         res.json({
@@ -99,9 +99,8 @@ const vendorLogin = async (req, res) => {
 
 const addProfileImage = async (req, res) => {
   try {
-    console.log("opjphiph");
     const id = req.body.vendorId;
-    console.log(id, "id");
+
     const image = req.file.filename;
     // Use async/await for the update operation
     const updatedVendor = await Vendor.findOneAndUpdate(
@@ -109,7 +108,7 @@ const addProfileImage = async (req, res) => {
       { $set: { image: image } },
       { new: true }
     );
-    console.log(updatedVendor + "uuuuu");
+
     if (updatedVendor) {
       res.json({ updated: true, data: updatedVendor });
     } else {
@@ -123,43 +122,17 @@ const addProfileImage = async (req, res) => {
   }
 };
 
-const vendorStudio = async(req,res)=>{
-    try {
-        const studio = await Studio.find({})
-        console.log(studio,'studio');  
-        res.status(200).json({status:true,studio})     
-    } catch (error) {
-        console.log(error.message);
-    res
-      .status(500)
-      .json({ updated: false, data: null, message: "Internal server error" });
-  
-    }
-}
-
-const postStudioForm = async (req, res) => {
-    console.log(4444);
+const vendorStudio = async (req, res) => {
   try {
-    const { studioName, city, about,category, subcategory, coverImage, galleryImage } = req.body;
-    const { vendorId } = req.query
-    const existStudio = await Studio.findOne({vendorId:vendorId})
-    console.log(existStudio,"existStudio");
-    if (existStudio) {
-        res.json({alert:"Studio already added",status:false})
+    const { id } = req.query;
+
+    const studio = await Studio.findOne({ vendorId: id }).populate("package");
+
+    if (studio) {
+      res.status(200).json({ status: true, studio });
     } else {
-    const createdStudio = await Studio({
-        studioName, 
-        city, 
-        about, 
-        category,
-        subcategory,
-        coverImage, 
-        galleryImage
-    })
-    const newStudio = createdStudio.save()
-    res.json({alert:"studio added", status:true})
-    console.log(req.body,"fiuf");
-}
+      res.status(200).json({ status: false, studio });
+    }
   } catch (error) {
     console.log(error.message);
     res
@@ -168,18 +141,120 @@ const postStudioForm = async (req, res) => {
   }
 };
 
-const postvendorCategory = async(req,res)=>{
-    try {
-        const vendorCategory = await Category.find({}).populate("subcategory")
-        console.log(vendorCategory[0].subcategory[0],"vendorCategory");
-        res.json({status:true,vendorCategory})
-    } catch (error) {
-        console.log(error.message);
-        res
-          .status(500)
-          .json({ updated: false, data: null, message: "Internal server error" }); 
+const postStudioForm = async (req, res) => {
+  try {
+    const { studioName, city, about, coverImage, galleryImage, vendorId } =
+      req.body;
+
+    const existStudio = await Studio.findOne({ vendorId: vendorId });
+
+    if (existStudio) {
+      res.json({ alert: "Studio already added", status: false });
+    } else {
+      const createdStudio = await Studio({
+        studioName,
+        vendorId,
+        city,
+        about,
+        coverImage,
+        galleryImage,
+      });
+      const newStudio = createdStudio.save();
+      res.json({ alert: "studio added", status: true });
     }
-}
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
+
+const postvendorCategory = async (req, res) => {
+  try {
+    const vendorCategory = await Category.find({}).populate("subcategory");
+
+    res.json({ status: true, vendorCategory });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
+
+const getPackageList = async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    const token = auth.split(" ")[1];
+
+    // Verify the token to get the vendorId
+    const decodedToken = jwt.verify(token, process.env.VENDOR_SECRET_KEY);
+
+    const vendorId = decodedToken.vendorId;
+    const studio = await Studio.findOne({ vendorId: vendorId });
+    console.log(studio, "studio");
+    const packageData = await Package.find({ studioId: studio._id });
+    console.log(packageData, "packageData");
+    res.json({ status: true, packageData });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
+
+const postaddPackage = async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    const token = auth.split(" ")[1];
+
+    // Verify the token to get the vendorId
+    const decodedToken = jwt.verify(token, process.env.VENDOR_SECRET_KEY);
+
+    const vendorId = decodedToken.vendorId;
+
+    const { localState } = req.body;
+    console.log(req.body, " req.body");
+    console.log(localState.subCategoryName, " localState.subcategory");
+
+    const existCategory = await Package.findOne({
+      subcategory: localState.subCategoryName,
+    });
+    console.log(existCategory, "existCategory");
+    if (existCategory) {
+      res.json({
+        alert: "package already exist for this subcategory",
+        status: false,
+      });
+    } else {
+      const package = new Package({
+        subcategory: localState.subCategoryName,
+        camera: localState.camera,
+        video: localState.video,
+        both: localState.both,
+      });
+
+      const newPackage = await package.save();
+
+      const newStudio = await Studio.findOne({ vendorId: vendorId });
+      console.log(newStudio, "newStudio");
+      if (newStudio) {
+        newStudio.package.push(newPackage._id);
+        package.studioId.push(newStudio._id);
+        const newStudioPackage = await newStudio.save();
+        const newPackageStudio = await package.save();
+      }
+      res.json({ alert: "new package added", status: true, newPackage });
+    }
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
 
 module.exports = {
   vendorRegister,
@@ -188,5 +263,7 @@ module.exports = {
   addProfileImage,
   vendorStudio,
   postStudioForm,
-  postvendorCategory
+  postvendorCategory,
+  getPackageList,
+  postaddPackage,
 };
