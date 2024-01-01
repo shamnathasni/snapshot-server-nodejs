@@ -16,7 +16,8 @@ const packageSchema = mongoose.Schema({
         type:String,
         required:true
     },
-    studioId:[{type:mongoose.Schema.Types.ObjectId}]
+   
+    studioId:{type:mongoose.Schema.Types.ObjectId},
 })
 
 const package = mongoose.model("Package",packageSchema)

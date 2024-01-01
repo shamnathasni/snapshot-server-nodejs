@@ -1,6 +1,12 @@
 const express = require("express");
 const App = express();
 const CORS = require("cors")
+const http = require("http");
+const socketSetup = require("./chat/socket")
+
+// const server = http.createServer(App);
+const io = socketSetup();
+
 
 require("dotenv").config();
 const PORT = process.env.PORT||3000;
@@ -14,7 +20,7 @@ App.use(express.urlencoded({extended:true}))
 App.use(
     CORS({
       origin: "http://localhost:5173",  // <-- Specify the allowed origin
-      credentials: true,  // <-- Enable credentials (cookies, authorization headers, etc.)
+      // credentials: true,  // <-- Enable credentials (cookies, authorization headers, etc.)
     })
   );
 

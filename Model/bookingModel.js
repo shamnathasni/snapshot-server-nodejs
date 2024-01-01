@@ -12,8 +12,18 @@ const bookingSchema = mongoose.Schema({
         type:Date,
         required:true
     },
-    package:[{type:mongoose.Schema.Types.ObjectId}],
-    studio:[{type:mongoose.Schema.Types.ObjectId}],
+    is_verified:{
+        type:Boolean,
+        default:false
+    },
+    package:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Package"
+    },
+    studio:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Studio"
+    },
 
 })
 

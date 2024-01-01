@@ -23,7 +23,12 @@ const mongoose = require("mongoose")
     image:{
         type:String,
         default:""
-    }
+    },
+    booking:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Booking"
+    
+    }]
  })
 
  const user = mongoose.model("User", userSchema);

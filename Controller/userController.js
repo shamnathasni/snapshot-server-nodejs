@@ -6,7 +6,9 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const studio = require("../Model/studioModel");
+const Package = require("../Model/packageModel");
 const Bookings = require("../Model/bookingModel");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 require("dotenv").config();
 
 const securePassword = async (password) => {
@@ -250,25 +252,30 @@ const getSinglStudio = async (req, res) => {
   }
 };
 
+const getStudioPackages = async (req, res) => {
+  try {
+    const { id } = req.query;
+    const packages = await Package.find({ studioId: id });
+    res.json({ status: true, packages });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
+
 const postBooking = async (req, res) => {
   try {
-    const auth = req.headers.authorization;
-    const token = auth.split(" ")[1];
-
-    // Verify the token to get the vendorId
-    const decodedToken = jwt.verify(token, process.env.VENDOR_SECRET_KEY);
-
-    const vendorId = decodedToken.vendorId;
-    const studio = await Studio.findOne({ vendorId: vendorId });
-
-    const { booking, type, date, Id } = req.body;
+    const { booking, type, date, Id, studioId } = req.body;
     console.log(req.body, "req.body");
+
     const newBooking = new Bookings({
       type: type,
       amount: booking,
       date: date,
       package: Id,
-      studio: studio._id,
+      studio: studioId,
     });
     console.log(newBooking, "newBooking");
     const bookingData = await newBooking.save();
@@ -283,6 +290,119 @@ const postBooking = async (req, res) => {
   }
 };
 
+const getBookingDates = async (req, res) => {
+  try {
+    const { id } = req.query;
+    console.log(req.query, "lll");
+    const bookingdates = await Bookings.find(
+      { studio: id },
+      { _id: 0, date: 1 }
+    );
+    console.log(bookingdates, "bookingdates");
+    res.json({ status: 200, bookingdates });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
+
+const getIsBookedDate = async (req, res) => {
+  try {
+    const { date } = req.query;
+    const formatDate = new Date(date)
+    console.log(formatDate,"formatDate");
+    const isbookingDate = await Bookings.findOne({ date: formatDate });
+    console.log(isbookingDate,"isbookingDate");
+    if (isbookingDate) {
+        res.json({status:false,alert:"not available on this date"}) 
+    } else {
+        res.json({status:true})
+    }
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
+
+const paymentBooking = async (req, res) => {
+    try {
+      const { package } = req.body;
+      console.log( req.body," req.body");
+      const packageId = package._id;
+      console.log(packageId,"11");
+      const advanceAmount = Math.floor(package.amount * (15 / 100));
+  
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "inr",
+              product_data: {
+                name: "Amount",
+              },
+              unit_amount: advanceAmount * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `http://localhost:5173/success?packageId=${packageId}`, // Include packageId in the URL
+        cancel_url: "http://localhost:5173/cancel",
+      });
+  
+      res.json({ id: session.id });
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send({ error: "Internal Server Error" });
+    }
+  };
+  
+
+const confirmPayment = async ( req, res ) =>{
+    try {
+        const { id } = req.query
+        console.log(req.query,"id");
+        const auth = req.headers.authorization;
+        const token = auth.split(" ")[1];
+        const decode = jwt.verify(token, process.env.USER_SECRET_KEY);
+        console.log(decode,"decode");
+        const confirm = await Bookings.updateOne({_id:id},{$set:{is_verified:true}})
+        console.log(confirm,"confirm")
+        const userBooking = await User.findOne({_id:decode.userId})
+        userBooking.booking.push(id)
+        userBooking.save()
+        console.log(userBooking,"userBooking")
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ error: "Internal Server Error" }); 
+    }
+}
+
+const getBookingdetails =async ( req, res ) => {
+    try {
+        const { id } = req.query
+        console.log(req.query,"req.query");
+        const bookingdetails = await User.findOne({ _id: id }).populate({
+            path: 'booking',
+            populate:[  
+                {path: 'studio'},
+                {path:"package"}
+            ],
+          });
+          
+        console.log(bookingdetails.booking[1].studio.studioName,"bookingdetails");
+        res.json({status:true,bookingdetails})
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ error: "Internal Server Error" }); 
+    }
+}
+
 module.exports = {
   userRegister,
   securePassword,
@@ -293,5 +413,11 @@ module.exports = {
   getCategoryList,
   getStudioList,
   getSinglStudio,
+  getStudioPackages,
   postBooking,
+  getBookingDates,
+  getIsBookedDate,
+  paymentBooking,
+  confirmPayment,
+  getBookingdetails
 };

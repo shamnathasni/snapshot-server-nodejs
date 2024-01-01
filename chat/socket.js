@@ -1,0 +1,38 @@
+// socket.js
+const socketIO = require("socket.io");
+const http = require("http");
+const cors = require("cors");
+
+module.exports = () => {
+    const server = http.createServer();
+
+    const io = socketIO(server, {
+        cors: {
+            origin: "http://localhost:5173",  // Replace with the actual origin of your client application
+            methods: ["GET", "POST"],
+            credentials: true,
+        }
+    });
+
+    io.on("connection", (socket) => {
+        console.log(`⚡: ${socket.id} user just connected!`);
+
+        // Listens and logs the message to the console
+        socket.on("message", (data) => {
+            console.log("message recived");
+            io.emit("messageResponse", data);
+            console.log(data);
+        });
+
+        socket.on("disconnect", () => {
+            console.log(`🔥: User ${socket.id} disconnected`);
+        });
+    });
+
+    const PORT = process.env.SOCKET_PORT || 4000;
+    server.listen(PORT, () => {
+        console.log(`Socket.IO server listening on port ${PORT}`);
+    });
+
+    return io;
+};

@@ -27,7 +27,7 @@ const mongoose = require("mongoose")
     package:[{
         type:mongoose.Types.ObjectId,
         ref: 'Package',
-    }]
+    }],
     
  })
 

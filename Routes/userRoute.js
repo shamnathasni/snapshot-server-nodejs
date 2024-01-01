@@ -14,8 +14,14 @@ const { uploadOptions } = require("../Config/multer")
  userRoute.get('/categorylist',userController.getCategoryList)
  userRoute.get('/studiolist',userController.getStudioList)
  userRoute.get('/singleStudio',userController.getSinglStudio)
+ userRoute.get('/studioPackages',userController.getStudioPackages)
 
  userRoute.post("/bookingData",userController.postBooking)
+ userRoute.get("/bookedates",userController.getBookingDates)
+ userRoute.get("/isBookedDate",userController.getIsBookedDate)
+ userRoute.post("/api/create-checkout-session",userController.paymentBooking)
+ userRoute.get("/confirmpayment",userController.confirmPayment)
+ userRoute.get("/bookingdetails",userController.getBookingdetails)
 
  module.exports = userRoute
  

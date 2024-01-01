@@ -236,17 +236,19 @@ const postaddPackage = async (req, res) => {
         both: localState.both,
       });
 
-      const newPackage = await package.save();
+      
 
       const newStudio = await Studio.findOne({ vendorId: vendorId });
       console.log(newStudio, "newStudio");
       if (newStudio) {
-        newStudio.package.push(newPackage._id);
-        package.studioId.push(newStudio._id);
+        newStudio.package.push(package._id);
         const newStudioPackage = await newStudio.save();
-        const newPackageStudio = await package.save();
+        console.log(newStudio, "newStudio2");
+         
+        package.studioId = newStudio._id  
+        const newPackage = await package.save();
+        res.json({ alert: "new package added", status: true, newPackage });
       }
-      res.json({ alert: "new package added", status: true, newPackage });
     }
   } catch (error) {
     console.log(error.message);
