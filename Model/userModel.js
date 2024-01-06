@@ -28,6 +28,19 @@ const mongoose = require("mongoose")
         type:mongoose.Schema.Types.ObjectId,
         ref:"Booking"
     
+    }],
+    wallet:{
+        type:Number,
+        default:0
+    },
+    walletHistory:[{
+        amount:{
+            type:Number
+        },
+        date:{
+            type:Date,
+            default:Date.now
+        }
     }]
  })
 

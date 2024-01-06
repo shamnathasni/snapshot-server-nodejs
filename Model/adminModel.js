@@ -7,7 +7,23 @@ const adminSchema = mongoose.Schema({
     password:{
         type:String,
         required:true
-    }
+    },
+    wallet:{
+        type:Number,
+        default:0
+    },
+    walletHistory:[{
+        amount:{
+            type:Number
+        },
+        date:{
+            type:Date,
+            default:Date.now
+        },
+        from:{
+            type:String
+        }
+    }]
 })
 
 const admin = mongoose.model("Admin", adminSchema);

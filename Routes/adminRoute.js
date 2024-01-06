@@ -22,4 +22,6 @@ adminRoute.patch("/categorylist",adminController.listCategory)
 adminRoute.get("/subcategorylist/:categoryId",adminController.subCategoryList)
 adminRoute.post("/addsubCategory/:categoryId",uploadOptions.single('image'),adminController.addSubCategory)
 
+adminRoute.post("/configureBooking",adminController.postConfigureBooking)
+
 module.exports = adminRoute

@@ -8,6 +8,8 @@ const bcrypt = require("bcrypt");
 const studio = require("../Model/studioModel");
 const Package = require("../Model/packageModel");
 const Bookings = require("../Model/bookingModel");
+const Admin = require("../Model/adminModel");
+const Vendor = require("../Model/vendorModel");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 require("dotenv").config();
 
@@ -215,7 +217,7 @@ const getCategoryList = async (req, res) => {
     const categoryData = await Category.find({ is_Verified: true }).populate(
       "subcategory"
     );
-    console.log(categoryData, "categoryData");
+    // console.log(categoryData, "categoryData");
     res.json({ status: true, categoryData });
   } catch (error) {
     console.log(error);
@@ -238,7 +240,24 @@ const getStudioList = async (req, res) => {
   }
 };
 
-const getSinglStudio = async (req, res) => {
+const getCategoryStudioList = async (req, res )=>{
+  try {
+    const {subCategory} = req.query
+    console.log(req.query,"000");
+    const studioIds = await Package.distinct("studioId", { subcategory: subCategory });
+    // Populate the studios based on the found studioIds
+    const studioData = await Studio.find({ "_id": { $in: studioIds } })
+console.log(studioData,'fsdfsdfsa');
+    res.json({status:true,studioData})
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+}
+
+const getSingleStudio = async (req, res) => {
   try {
     const { id } = req.query;
     console.log(req.query, "req.body");
@@ -270,12 +289,18 @@ const postBooking = async (req, res) => {
     const { booking, type, date, Id, studioId } = req.body;
     console.log(req.body, "req.body");
 
+    const auth = req.headers.authorization;
+    const token = auth.split(" ")[1];
+    const decode = jwt.verify(token, process.env.USER_SECRET_KEY);
+    console.log(decode);
+
     const newBooking = new Bookings({
       type: type,
       amount: booking,
       date: date,
       package: Id,
       studio: studioId,
+      user:decode.userId
     });
     console.log(newBooking, "newBooking");
     const bookingData = await newBooking.save();
@@ -334,7 +359,7 @@ const paymentBooking = async (req, res) => {
       console.log( req.body," req.body");
       const packageId = package._id;
       console.log(packageId,"11");
-      const advanceAmount = Math.floor(package.amount * (15 / 100));
+      const advanceAmount = (package.amount * (15 / 100)).toFixed(0)
   
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -367,16 +392,43 @@ const confirmPayment = async ( req, res ) =>{
     try {
         const { id } = req.query
         console.log(req.query,"id");
+        //calculate wallet amount for vendor nd admin
+        const booking = await Bookings.findOne({_id:id}).populate("studio")
+console.log(booking,"booking");
+        const advance = (booking.amount * (15 / 100)).toFixed(0); 
+        console.log(advance,"advance");
+
+        const AdminWallet = (advance*(5/100)).toFixed(0)
+        console.log(AdminWallet,"AdminWallet");
+
+        const vendorWallet = (advance-AdminWallet).toFixed(0)
+        console.log(vendorWallet,"vendorWallet");
+
         const auth = req.headers.authorization;
+        console.log(auth,"auth");
         const token = auth.split(" ")[1];
         const decode = jwt.verify(token, process.env.USER_SECRET_KEY);
-        console.log(decode,"decode");
+        console.log(decode,"decodeUser");
         const confirm = await Bookings.updateOne({_id:id},{$set:{is_verified:true}})
         console.log(confirm,"confirm")
         const userBooking = await User.findOne({_id:decode.userId})
         userBooking.booking.push(id)
         userBooking.save()
-        console.log(userBooking,"userBooking")
+        console.log(userBooking,"userBooking");
+          //update wallet of vendor
+
+          const updateVendorWallet = await Vendor.updateOne({ _id: booking.studio.vendorId },
+            {
+              $inc: { wallet: vendorWallet }, // Increment the wallet by the specified amount
+              $push: {
+                walletHistory: {
+                  amount: vendorWallet,
+                  date: new Date(),
+                  from: userBooking.name
+                },
+              },
+            })
+            console.log(updateVendorWallet,"updateVendorWallet");
     } catch (error) {
         console.error(error.message);
         res.status(500).send({ error: "Internal Server Error" }); 
@@ -395,12 +447,59 @@ const getBookingdetails =async ( req, res ) => {
             ],
           });
           
-        console.log(bookingdetails.booking[1].studio.studioName,"bookingdetails");
         res.json({status:true,bookingdetails})
     } catch (error) {
         console.error(error.message);
         res.status(500).send({ error: "Internal Server Error" }); 
     }
+}
+
+const getChatdetails = async (req, res ) => {
+    try {
+        const { id } = req.query
+        const chatData = await Bookings.findOne({_id:id},{chat:1})
+        res.json({status:true,chatData})
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ error: "Internal Server Error" });  
+    }
+}
+
+
+const getSearchData = async (req, res ) => {
+  console.log(777);
+    try {
+        const { data } = req.query
+        console.log(data,"data");
+        const regex = new RegExp(data,"i")
+        const search = await Studio.find({
+          $or:[
+          {studioName:{$regex:regex}},
+          {city:{$regex:regex}}
+        ]
+        })
+        res.json({status:true,search})
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send({ error: "Internal Server Error" });  
+    }
+}
+
+
+const postRating = async ( req, res ) => {
+  try {
+    const { packageId,rating } = req.body
+    console.log( rating,"req.body");
+    const studioId = await Bookings.findOne({_id:packageId}).populate("studio")
+    console.log(studioId,"studioId");
+    // const studio = await Studio.findOne({_id:packageId})
+    studioId.studio.rating= rating
+    studioId.studio.save()
+    console.log(studioId,22);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
 }
 
 module.exports = {
@@ -412,12 +511,16 @@ module.exports = {
   resendUserOtp,
   getCategoryList,
   getStudioList,
-  getSinglStudio,
+  getCategoryStudioList,
+  getSingleStudio,
   getStudioPackages,
   postBooking,
   getBookingDates,
   getIsBookedDate,
   paymentBooking,
   confirmPayment,
-  getBookingdetails
+  getBookingdetails,
+  getChatdetails,
+  getSearchData,
+  postRating
 };

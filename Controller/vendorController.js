@@ -6,6 +6,7 @@ const Studio = require("../Model/studioModel");
 const Category = require("../Model/categoryModel");
 const subcategory = require("../Model/subCategory");
 const Package = require("../Model/packageModel");
+const Booking = require("../Model/bookingModel")
 require("dotenv").config();
 
 const securePassword = async (password) => {
@@ -125,13 +126,16 @@ const addProfileImage = async (req, res) => {
 const vendorStudio = async (req, res) => {
   try {
     const { id } = req.query;
+    console.log(req.query,"req.query");
 
     const studio = await Studio.findOne({ vendorId: id }).populate("package");
+    const studio1 = await Vendor.findOne({_id: id })
+    console.log(studio1,"studio");
 
     if (studio) {
       res.status(200).json({ status: true, studio });
     } else {
-      res.status(200).json({ status: false, studio });
+      res.status(200).json({ status: false, });
     }
   } catch (error) {
     console.log(error.message);
@@ -145,6 +149,7 @@ const postStudioForm = async (req, res) => {
   try {
     const { studioName, city, about, coverImage, galleryImage, vendorId } =
       req.body;
+      console.log(req.body,"req.body");
 
     const existStudio = await Studio.findOne({ vendorId: vendorId });
 
@@ -160,6 +165,8 @@ const postStudioForm = async (req, res) => {
         galleryImage,
       });
       const newStudio = createdStudio.save();
+      console.log(newStudio,"newStudio");
+
       res.json({ alert: "studio added", status: true });
     }
   } catch (error) {
@@ -258,6 +265,39 @@ const postaddPackage = async (req, res) => {
   }
 };
 
+const bookingDetails = async ( req,  res ) => {
+  try {
+    const { Id } = req.query
+    console.log( req.query,111);
+    const studio = await Studio.findOne({vendorId:Id})
+    console.log(studio,"studio");
+    const bookings = await  Booking.find({studio:studio._id}).populate("package").populate("studio")
+      
+    console.log(bookings,"bookings");
+    res.json({status:true,bookings})
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+}
+
+const vendorChat = async ( req, res ) => {
+  try {
+    const { Id } = req.query
+    console.log( req.query," req.query");
+    const chat = await Booking.findOne({_id:Id},{chat:1})
+    console.log(chat,"chat");
+    res.json({status:true,chat})
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+}
+
 module.exports = {
   vendorRegister,
   securePassword,
@@ -268,4 +308,6 @@ module.exports = {
   postvendorCategory,
   getPackageList,
   postaddPackage,
+  bookingDetails,
+  vendorChat
 };

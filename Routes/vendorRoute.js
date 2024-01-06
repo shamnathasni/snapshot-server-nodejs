@@ -14,5 +14,7 @@ vendorRoute.post("/studioform",uploadOptions.array('image'),vendorController.pos
 vendorRoute.get("/vendorcategory",vendorController.postvendorCategory)
 vendorRoute.get("/packageList",vendorController.getPackageList)
 vendorRoute.post("/addPackage",vendorController.postaddPackage)
+vendorRoute.get("/bookingdetails",vendorController.bookingDetails)
+vendorRoute.get("/vendorchat",vendorController.vendorChat)
 
 module.exports = vendorRoute

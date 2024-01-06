@@ -17,7 +17,7 @@ const packageSchema = mongoose.Schema({
         required:true
     },
    
-    studioId:{type:mongoose.Schema.Types.ObjectId},
+    studioId:{type:mongoose.Schema.Types.ObjectId, ref: "Studio"},
 })
 
 const package = mongoose.model("Package",packageSchema)

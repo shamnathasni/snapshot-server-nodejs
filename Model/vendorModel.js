@@ -23,7 +23,23 @@ const mongoose = require("mongoose")
     image:{
         type:String,
         default:""
-    }
+    },
+    studioId:{
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Studio' 
+    },
+    walletHistory:[{
+        amount:{
+            type:Number
+        },
+        date:{
+            type:Date,
+            default:Date.now
+        },
+        from:{
+            type:String
+        }
+    }]
  })
 
  const vendor = mongoose.model("Vendor", vendorSchema);

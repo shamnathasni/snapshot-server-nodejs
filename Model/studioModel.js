@@ -20,15 +20,18 @@ const mongoose = require("mongoose")
         type:String,
         default:""
     },
-    galleryImage:{
+    galleryImage:[{
         type:String,
         default:""
-    },
+    }],
     package:[{
         type:mongoose.Types.ObjectId,
         ref: 'Package',
     }],
-    
+    rating:{
+        type:Number,
+        default:0
+    }
  })
 
  const studio = mongoose.model("Studio", studioSchema);
