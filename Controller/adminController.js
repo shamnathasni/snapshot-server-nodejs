@@ -298,6 +298,38 @@ const postConfigureBooking = async (req, res) => {
   }
 };
 
+const postMonthlyBookings = async (req, res) => {
+  try {
+    const result = await bookings.aggregate([
+      {
+        $match: {
+          is_verified: true,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$date" },
+            year: { $year: "$date" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1,
+        },
+      },
+    ]);
+
+    res.json({ result, status: true });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ alert: "Internal Server Error", status: false });
+  }
+};
+
 module.exports = {
   adminLogin,
   userList,
@@ -313,4 +345,5 @@ module.exports = {
   subCategoryList,
   addSubCategory,
   postConfigureBooking,
+  postMonthlyBookings
 };

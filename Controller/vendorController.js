@@ -222,11 +222,14 @@ const postaddPackage = async (req, res) => {
 
     const vendorId = decodedToken.vendorId;
 
+    const studio = await Studio.findOne({vendorId:vendorId})
+
     const { localState } = req.body;
-    console.log(req.body, " req.body");
+    console.log(localState, " req.body");
     console.log(localState.subCategoryName, " localState.subcategory");
 
     const existCategory = await Package.findOne({
+      studioId:studio._id,
       subcategory: localState.subCategoryName,
     });
     console.log(existCategory, "existCategory");

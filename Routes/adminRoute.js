@@ -24,4 +24,6 @@ adminRoute.post("/addsubCategory/:categoryId",uploadOptions.single('image'),admi
 
 adminRoute.post("/configureBooking",adminController.postConfigureBooking)
 
+adminRoute.post("/bookings-by-month",adminController.postMonthlyBookings)
+
 module.exports = adminRoute
