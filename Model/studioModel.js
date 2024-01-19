@@ -29,8 +29,8 @@ const mongoose = require("mongoose")
         ref: 'Package',
     }],
     rating:{
-        type:Number,
-        default:0
+        type:[Number],
+        default:[]
     }
  })
 

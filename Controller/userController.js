@@ -317,12 +317,12 @@ const postBooking = async (req, res) => {
 
 const getBookingDates = async (req, res) => {
   try {
-    const { id } = req.query;
+    const { studioId,subcategory } = req.body;
     console.log(req.query, "lll");
     const bookingdates = await Bookings.find(
-      { studio: id },
+      { studio: studioId } ,
       { _id: 0, date: 1 }
-    );
+    ).populate("package");
     console.log(bookingdates, "bookingdates");
     res.json({ status: 200, bookingdates });
   } catch (error) {
@@ -335,10 +335,11 @@ const getBookingDates = async (req, res) => {
 
 const getIsBookedDate = async (req, res) => {
   try {
-    const { date } = req.query;
-    const formatDate = new Date(date)
+    const { formattedDate,studioId,subcategory } = req.body;
+    const formatDate = new Date(formattedDate)
+    console.log(req.body,"req.bodylll");
     console.log(formatDate,"formatDate");
-    const isbookingDate = await Bookings.findOne({ date: formatDate });
+    const isbookingDate = await Bookings.findOne({ studio:studioId,date: formatDate,"package.subcategory":subcategory }).populate("package");
     console.log(isbookingDate,"isbookingDate");
     if (isbookingDate) {
         res.json({status:false,alert:"not available on this date"}) 
@@ -486,21 +487,28 @@ const getSearchData = async (req, res ) => {
 }
 
 
-const postRating = async ( req, res ) => {
+const postRating = async (req, res) => {
   try {
-    const { packageId,rating } = req.body
-    console.log( rating,"req.body");
-    const studioId = await Bookings.findOne({_id:packageId}).populate("studio")
-    console.log(studioId,"studioId");
-    // const studio = await Studio.findOne({_id:packageId})
-    studioId.studio.rating= rating
-    studioId.studio.save()
-    console.log(studioId,22);
+    const { packageId, rating } = req.body;
+    console.log(rating, "req.body");
+
+    const studioId = await Bookings.findOne({ _id: packageId }).populate("studio");
+
+    if (!studioId) {
+      return res.status(404).send({ error: "Studio not found" });
+    }
+
+    // Ensure the rating field in Studio model schema is an array
+    studioId.studio.rating.push(rating);
+    await studioId.studio.save();
+
+    console.log(studioId, 22);
+    res.status(200).send({ success: true });
   } catch (error) {
     console.error(error.message);
     res.status(500).send({ error: "Internal Server Error" });
   }
-}
+};
 
 module.exports = {
   userRegister,
