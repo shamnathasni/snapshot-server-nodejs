@@ -17,7 +17,7 @@ dbConnection()
 
 App.use(express.json())
 App.use(express.urlencoded({extended:true}))
-App.use(CORS({ origin: 'https://snapshot-studios.vercel.app' }));
+App.use(CORS());
 
 const userRoute = require("./Routes/userRoute")
 App.use("/",userRoute)
