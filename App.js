@@ -18,7 +18,7 @@ dbConnection()
 App.use(express.json())
 App.use(express.urlencoded({extended:true}))
 App.use(CORS({
-  origin: "https://snapshot.studios.vercel.app",
+  origin: "https://snapshot-studios.vercel.app",
   credentials: true, // Include credentials in the CORS request (if needed)
 }));
 
