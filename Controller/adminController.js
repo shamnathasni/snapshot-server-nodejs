@@ -148,8 +148,21 @@ const unblockvendor = async (req, res) => {
 
 const studioList = async (req,res) => {
   try {
-    const studio = await Studio.find({})
-    res.json({status:true,studio}).populate("vendorId")
+    const studio = await Studio.find({}).populate("vendorId").populate("package").exec()
+    res.json({status:true,studio})
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ alert: "Internal Server Error", status: false }); 
+  }
+}
+
+const bookingList = async (req,res) => {
+  console.log(11);
+  try {
+    const { studioid } = req.query
+    console.log(req.query,"iii");
+    const bookingData = await bookings.find({studio:studioid}).populate("package").populate("studio")
+    res.json({status:true,bookingData})
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ alert: "Internal Server Error", status: false }); 
@@ -371,10 +384,11 @@ module.exports = {
   userList,
   blockUser,
   unblockUser,
+  studioList,
+  bookingList,
   vendorlist,
   blockvendor,
   unblockvendor,
-  studioList,
   categoryList,
   addCategory,
   unlistCategory,

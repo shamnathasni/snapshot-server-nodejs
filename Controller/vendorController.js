@@ -323,7 +323,7 @@ const vendorChat = async ( req, res ) => {
   try {
     const { Id } = req.query
     console.log( req.query," req.query");
-    const chat = await Booking.findOne({_id:Id},{chat:1})
+    const chat = await Booking.findOne({_id:Id},{chat:1}).populate("user")
     console.log(chat,"chat");
     res.json({status:true,chat})
   } catch (error) {
