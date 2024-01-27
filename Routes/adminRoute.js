@@ -14,6 +14,8 @@ adminRoute.post("/vendorlist",adminController.vendorlist)
 adminRoute.patch("/blockvendor",adminController.blockvendor)
 adminRoute.patch("/unblockvendor",adminController.unblockvendor)
 
+adminRoute.post("/admin/studiolist",adminController.studioList)
+
 adminRoute.get("/categorylist",adminController.categoryList)
 adminRoute.post("/addcategory",adminController.addCategory)
 adminRoute.patch("/categoryunlist",adminController.unlistCategory)
@@ -25,5 +27,7 @@ adminRoute.post("/addsubCategory/:categoryId",uploadOptions.single('image'),admi
 adminRoute.post("/configureBooking",adminController.postConfigureBooking)
 
 adminRoute.post("/bookings-by-month",adminController.postMonthlyBookings)
+adminRoute.post("/vendorgraph",adminController.postVendorGraph)
+adminRoute.post("/usergraph",adminController.postUserGraph)
 
 module.exports = adminRoute

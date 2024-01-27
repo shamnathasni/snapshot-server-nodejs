@@ -4,6 +4,7 @@ const CORS = require("cors")
 const http = require("http");
 const socketSetup = require("./chat/socket")
 
+
 // const server = http.createServer(App);
 const io = socketSetup();
 
@@ -17,12 +18,11 @@ dbConnection()
 
 App.use(express.json())
 App.use(express.urlencoded({extended:true}))
-App.use(CORS(
- { 
-  origin: 'https://snapshot-studios.vercel.app',
-  credentials: true,
-}
-));
+App.use(CORS({
+    origin:"http://localhost:5173",
+    credentials:true
+}));
+
 
 const userRoute = require("./Routes/userRoute")
 App.use("/",userRoute)

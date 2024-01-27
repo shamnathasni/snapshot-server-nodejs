@@ -5,8 +5,8 @@ const mongoose = require("mongoose")
         required:true
     },
     vendorId:{
-        type:String,
-        required:true
+        type:mongoose.Types.ObjectId,
+        ref: 'Vendor',
     },
     city:{
         type:String,

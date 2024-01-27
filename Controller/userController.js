@@ -103,7 +103,8 @@ const verifyUserOtp = async (req, res) => {
       if (newUser) {
         const token = jwt.sign(
           { userId: newUser._id },
-          process.env.USER_SECRET_KEY
+          process.env.USER_SECRET_KEY,
+          { expiresIn: "1d" }
         );
         res.json({
           newUser,
@@ -161,7 +162,8 @@ const userLogin = async (req, res) => {
       if (access) {
         const token = jwt.sign(
           { userId: emailExist._id },
-          process.env.USER_SECRET_KEY
+          process.env.USER_SECRET_KEY,
+          { expiresIn: "1d" }
         );
 
         res.json({
@@ -183,6 +185,50 @@ const userLogin = async (req, res) => {
     res.status(500).json({ alert: "internal server error", status: false });
   }
 };
+
+ const googleAuth = async (req, res) => {
+  try {
+    const { email, displayName, photoURL } = req.body;
+    const user = await User.findOne({ email: email });
+    if (user) {
+  
+      const token = jwt.sign(
+        { userId: user._id },
+        process.env.USER_SECRET_KEY,
+        { expiresIn: "1d" }
+      );
+      const { password, ...userData } = user._doc;
+
+      res.status(200).json({ user: userData, token });
+    } else {
+      const generatedPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await securePassword(generatedPassword);
+
+      const newUser = new User({
+        name:
+          displayName.split(" ").join("").toLowerCase() +
+          Math.random().toString(36).slice(-4),
+        email: email,
+        password: hashedPassword,
+        profileImage: photoURL,
+        isEmailVerified: true,
+      });
+
+      await newUser.save();
+
+      const token = jwt.sign({ userId: newUser._id }, process.env.USER_SECRET_KEY);
+      const { password, ...userData } = newUser._doc;
+
+      return res
+        .status(200)
+        .json({ user: userData, message: "User created successfully." });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 const addProfileImage = async (req, res) => {
   try {
@@ -240,22 +286,24 @@ const getStudioList = async (req, res) => {
   }
 };
 
-const getCategoryStudioList = async (req, res )=>{
+const getCategoryStudioList = async (req, res) => {
   try {
-    const {subCategory} = req.query
-    console.log(req.query,"000");
-    const studioIds = await Package.distinct("studioId", { subcategory: subCategory });
+    const { subCategory } = req.query;
+    console.log(req.query, "000");
+    const studioIds = await Package.distinct("studioId", {
+      subcategory: subCategory,
+    });
     // Populate the studios based on the found studioIds
-    const studioData = await Studio.find({ "_id": { $in: studioIds } })
-console.log(studioData,'fsdfsdfsa');
-    res.json({status:true,studioData})
+    const studioData = await Studio.find({ _id: { $in: studioIds } });
+    console.log(studioData, "fsdfsdfsa");
+    res.json({ status: true, studioData });
   } catch (error) {
     console.log(error);
     res
       .status(500)
       .json({ updated: false, data: null, message: "Internal server error" });
   }
-}
+};
 
 const getSingleStudio = async (req, res) => {
   try {
@@ -287,12 +335,10 @@ const getStudioPackages = async (req, res) => {
 const postBooking = async (req, res) => {
   try {
     const { booking, type, date, Id, studioId } = req.body;
-    console.log(req.body, "req.body");
-
+    console.log(req.body, "req.body88");
     const auth = req.headers.authorization;
     const token = auth.split(" ")[1];
     const decode = jwt.verify(token, process.env.USER_SECRET_KEY);
-    console.log(decode);
 
     const newBooking = new Bookings({
       type: type,
@@ -300,13 +346,18 @@ const postBooking = async (req, res) => {
       date: date,
       package: Id,
       studio: studioId,
-      user:decode.userId
+      user: decode.userId,
     });
-    console.log(newBooking, "newBooking");
-    const bookingData = await newBooking.save();
-    res
-      .status(200)
-      .json({ status: true, alert: "make your advance payment", bookingData });
+    const bookingDetails = await newBooking.save();
+    const updateBookingInUser = await User.updateOne({_id:decode.userId},{$push:{booking:bookingDetails._id}})
+    const bookedUsera = await User.findOne({_id:decode.userId})
+    console.log(bookedUsera,"bookedUsera");
+    res.json({
+      status: true,
+      alert:
+        "wait for the approval of studio,then after the completion of payment you can confirm your booking",
+    });
+    console.log(req.body, "req.body88");
   } catch (error) {
     console.log(error);
     res
@@ -315,12 +366,72 @@ const postBooking = async (req, res) => {
   }
 };
 
+const postPaymentDetails = async (req,res)=>{
+  try {
+    const { bookingId } = req.query
+    console.log(bookingId,"bookingId");
+    const booking = await Bookings.findOne({_id:bookingId})
+    console.log(booking,"booking");
+    res.json({status:true,booking})
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+}
+
+// const postConfirmBooking = async (req, res) => {
+//   try {
+//     const { bookingData } = req.body;
+//     const bookingInfo = JSON.parse(bookingData);
+//     const { booking, type, date, Id, studioId, name } = bookingInfo;
+
+//     const auth = req.headers.authorization;
+//     const token = auth.split(" ")[1];
+//     const decode = jwt.verify(token, process.env.USER_SECRET_KEY);
+
+//     const newBooking = new Bookings({
+//       type: type,
+//       amount: booking,
+//       date: date,
+//       package: Id,
+//       studio: studioId,
+//       user: decode.userId,
+//     });
+
+//     const bookingDetails = await newBooking.save();
+//     const bookingId = bookingDetails._id;
+
+//     // Convert bookingDetails to a JSON string
+//     const bookingDetailsJson = JSON.stringify(bookingDetails);
+//     res.json({status:true,bookingDetails})
+//     // Construct the URL with proper encoding
+//     const redirectUrl = `http://localhost:5173/booking/${bookingId}?message=${encodeURIComponent("Booking successful")}&bookingDetails=${encodeURIComponent(bookingDetailsJson)}`;
+
+//     // Redirect to the booking page
+//     res.redirect(redirectUrl);
+//   } catch (error) {
+//     console.error(error.message);
+//     res.status(500).send({ error: "Internal Server Error" });
+//   }
+// };
+
+// const postCancelBooking = async(req,res)=>{
+//   try {
+//     res.redirect(`/?message=Booking cancellled by the vendor `);
+//   } catch (error) {
+//     console.error(error.message);
+//     res.status(500).send({ error: "Internal Server Error" });
+//   }
+//   }
+
 const getBookingDates = async (req, res) => {
   try {
-    const { studioId,subcategory } = req.body;
+    const { studioId, subcategory } = req.body;
     console.log(req.query, "lll");
     const bookingdates = await Bookings.find(
-      { studio: studioId } ,
+      { studio: studioId, is_verified: true },
       { _id: 0, date: 1 }
     ).populate("package");
     console.log(bookingdates, "bookingdates");
@@ -335,16 +446,20 @@ const getBookingDates = async (req, res) => {
 
 const getIsBookedDate = async (req, res) => {
   try {
-    const { formattedDate,studioId,subcategory } = req.body;
-    const formatDate = new Date(formattedDate)
-    console.log(req.body,"req.bodylll");
-    console.log(formatDate,"formatDate");
-    const isbookingDate = await Bookings.findOne({ studio:studioId,date: formatDate,"package.subcategory":subcategory }).populate("package");
-    console.log(isbookingDate,"isbookingDate");
+    const { formattedDate, studioId, subcategory } = req.body;
+    const formatDate = new Date(formattedDate);
+    console.log(req.body, "req.bodylll");
+    console.log(formatDate, "formatDate");
+    const isbookingDate = await Bookings.findOne({
+      studio: studioId,
+      date: formatDate,
+      "package.subcategory": subcategory,
+    }).populate("package");
+    console.log(isbookingDate, "isbookingDate");
     if (isbookingDate) {
-        res.json({status:false,alert:"not available on this date"}) 
+      res.json({ status: false, alert: "not available on this date" });
     } else {
-        res.json({status:true})
+      res.json({ status: true });
     }
   } catch (error) {
     console.log(error.message);
@@ -355,144 +470,143 @@ const getIsBookedDate = async (req, res) => {
 };
 
 const paymentBooking = async (req, res) => {
-    try {
-      const { package } = req.body;
-      console.log( req.body," req.body");
-      const packageId = package._id;
-      console.log(packageId,"11");
-      const advanceAmount = (package.amount * (15 / 100)).toFixed(0)
-  
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items: [
-          {
-            price_data: {
-              currency: "inr",
-              product_data: {
-                name: "Amount",
-              },
-              unit_amount: advanceAmount * 100,
+  try {
+    const { package } = req.body;
+    console.log(req.body, " req.body");
+    const packageId = package._id;
+    console.log(packageId, "11");
+    const advanceAmount = (package.amount * (15 / 100)).toFixed(0);
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "inr",
+            product_data: {
+              name: "Amount",
             },
-            quantity: 1,
+            unit_amount: advanceAmount * 100,
           },
-        ],
-        mode: "payment",
-        success_url: `https://snapshot-studios.vercel.app/success?packageId=${packageId}`, // Include packageId in the URL
-        cancel_url: "https://snapshot-studios.vercel.app/cancel",
-      });
-  
-      res.json({ id: session.id });
-    } catch (error) {
-      console.error(error.message);
-      res.status(500).send({ error: "Internal Server Error" });
-    }
-  };
-  
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `http://localhost:5173/success?packageId=${packageId}`, // Include packageId in the URL
+      cancel_url: "http://localhost:5173/cancel",
+    });
 
-const confirmPayment = async ( req, res ) =>{
-    try {
-        const { id } = req.query
-        console.log(req.query,"id");
-        //calculate wallet amount for vendor nd admin
-        const booking = await Bookings.findOne({_id:id}).populate("studio")
-console.log(booking,"booking");
-        const advance = (booking.amount * (15 / 100)).toFixed(0); 
-        console.log(advance,"advance");
+    res.json({ id: session.id });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+};
 
-        const AdminWallet = (advance*(5/100)).toFixed(0)
-        console.log(AdminWallet,"AdminWallet");
+const confirmPayment = async (req, res) => {
+  try {
+    const { id } = req.query;
+    console.log(req.query, "id");
+    //calculate wallet amount for vendor nd admin
+    const booking = await Bookings.findOne({ _id: id }).populate("studio");
+    console.log(booking, "booking");
+    const advance = (booking.amount * (15 / 100)).toFixed(0);
+    console.log(advance, "advance");
 
-        const vendorWallet = (advance-AdminWallet).toFixed(0)
-        console.log(vendorWallet,"vendorWallet");
+    const AdminWallet = (advance * (5 / 100)).toFixed(0);
+    console.log(AdminWallet, "AdminWallet");
 
-        const auth = req.headers.authorization;
-        console.log(auth,"auth");
-        const token = auth.split(" ")[1];
-        const decode = jwt.verify(token, process.env.USER_SECRET_KEY);
-        console.log(decode,"decodeUser");
-        const confirm = await Bookings.updateOne({_id:id},{$set:{is_verified:true}})
-        console.log(confirm,"confirm")
-        const userBooking = await User.findOne({_id:decode.userId})
-        userBooking.booking.push(id)
-        userBooking.save()
-        console.log(userBooking,"userBooking");
-          //update wallet of vendor
+    const vendorWallet = (advance - AdminWallet).toFixed(0);
+    console.log(vendorWallet, "vendorWallet");
 
-          const updateVendorWallet = await Vendor.updateOne({ _id: booking.studio.vendorId },
-            {
-              $inc: { wallet: vendorWallet }, // Increment the wallet by the specified amount
-              $push: {
-                walletHistory: {
-                  amount: vendorWallet,
-                  date: new Date(),
-                  from: userBooking.name
-                },
-              },
-            })
-            console.log(updateVendorWallet,"updateVendorWallet");
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send({ error: "Internal Server Error" }); 
-    }
-}
+    const auth = req.headers.authorization;
+    console.log(auth, "auth");
+    const token = auth.split(" ")[1];
+    const decode = jwt.verify(token, process.env.USER_SECRET_KEY);
+    console.log(decode, "decodeUser");
+    const confirm = await Bookings.updateOne(
+      { _id: id },
+      { $set: { is_verified: true } }
+    );
+    console.log(confirm, "confirm");
+    const userBooking = await User.findOne({ _id: decode.userId });
+    userBooking.booking.push(id);
+    userBooking.save();
+    console.log(userBooking, "userBooking");
+    //update wallet of vendor
 
-const getBookingdetails =async ( req, res ) => {
-    try {
-        const { id } = req.query
-        console.log(req.query,"req.query");
-        const bookingdetails = await User.findOne({ _id: id }).populate({
-            path: 'booking',
-            populate:[  
-                {path: 'studio'},
-                {path:"package"}
-            ],
-          });
-          
-        res.json({status:true,bookingdetails})
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send({ error: "Internal Server Error" }); 
-    }
-}
+    const updateVendorWallet = await Vendor.updateOne(
+      { _id: booking.studio.vendorId },
+      {
+        $inc: { wallet: vendorWallet }, // Increment the wallet by the specified amount
+        $push: {
+          walletHistory: {
+            amount: vendorWallet,
+            date: new Date(),
+            from: userBooking.name,
+          },
+        },
+      }
+    );
+    console.log(updateVendorWallet, "updateVendorWallet");
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+};
 
-const getChatdetails = async (req, res ) => {
-    try {
-        const { id } = req.query
-        const chatData = await Bookings.findOne({_id:id},{chat:1})
-        res.json({status:true,chatData})
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send({ error: "Internal Server Error" });  
-    }
-}
+const getBookingdetails = async (req, res) => {
+  try {
+    const { id } = req.query;
+    console.log(req.query, "req.query");
+    const bookingdetails = await User.findOne({ _id: id }).populate({
+      path: "booking",
+      populate: [{ path: "studio" }, { path: "package" }],
+    });
+    console.log(bookingdetails);
 
+    res.json({ status: true, bookingdetails });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+};
 
-const getSearchData = async (req, res ) => {
+const getChatdetails = async (req, res) => {
+  try {
+    const { id } = req.query;
+    const chatData = await Bookings.findOne({ _id: id }, { chat: 1 });
+    res.json({ status: true, chatData });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+};
+
+const getSearchData = async (req, res) => {
   console.log(777);
-    try {
-        const { data } = req.query
-        console.log(data,"data");
-        const regex = new RegExp(data,"i")
-        const search = await Studio.find({
-          $or:[
-          {studioName:{$regex:regex}},
-          {city:{$regex:regex}}
-        ]
-        })
-        res.json({status:true,search})
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send({ error: "Internal Server Error" });  
-    }
-}
-
+  try {
+    const { data } = req.query;
+    console.log(data, "data");
+    const regex = new RegExp(data, "i");
+    const search = await Studio.find({
+      $or: [{ studioName: { $regex: regex } }, { city: { $regex: regex } }],
+    });
+    res.json({ status: true, search });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+};
 
 const postRating = async (req, res) => {
   try {
     const { packageId, rating } = req.body;
     console.log(rating, "req.body");
 
-    const studioId = await Bookings.findOne({ _id: packageId }).populate("studio");
+    const studioId = await Bookings.findOne({ _id: packageId }).populate(
+      "studio"
+    );
 
     if (!studioId) {
       return res.status(404).send({ error: "Studio not found" });
@@ -517,12 +631,14 @@ module.exports = {
   addProfileImage,
   verifyUserOtp,
   resendUserOtp,
+  googleAuth,
   getCategoryList,
   getStudioList,
   getCategoryStudioList,
   getSingleStudio,
   getStudioPackages,
   postBooking,
+  postPaymentDetails,
   getBookingDates,
   getIsBookedDate,
   paymentBooking,
@@ -530,5 +646,5 @@ module.exports = {
   getBookingdetails,
   getChatdetails,
   getSearchData,
-  postRating
+  postRating,
 };

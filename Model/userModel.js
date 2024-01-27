@@ -6,7 +6,6 @@ const mongoose = require("mongoose")
     },
     number:{
         type:String,
-        required:true
     },
     email:{
         type:String,

@@ -42,7 +42,8 @@ const vendorRegister = async (req, res) => {
     if (newVendor) {
       const token = jwt.sign(
         { vendorId: newVendor._id },
-        process.env.VENDOR_SECRET_KEY
+        process.env.VENDOR_SECRET_KEY,
+        {expiresIn:"1d"}
       );
       return res.json({
         newVendor,
@@ -74,7 +75,8 @@ const vendorLogin = async (req, res) => {
       if (access) {
         const token = jwt.sign(
           { vendorId: emailExist._id },
-          process.env.VENDOR_SECRET_KEY
+          process.env.VENDOR_SECRET_KEY,
+          {expiresIn:"1d"}
         );
 
         res.json({
@@ -126,11 +128,11 @@ const addProfileImage = async (req, res) => {
 const vendorStudio = async (req, res) => {
   try {
     const { id } = req.query;
-    console.log(req.query,"req.query");
+    
 
     const studio = await Studio.findOne({ vendorId: id }).populate("package");
     const studio1 = await Vendor.findOne({_id: id })
-    console.log(studio1,"studio");
+   
 
     if (studio) {
       res.status(200).json({ status: true, studio });
@@ -146,10 +148,11 @@ const vendorStudio = async (req, res) => {
 };
 
 const postStudioForm = async (req, res) => {
+  console.log(44);
   try {
     const { studioName, city, about, coverImage, galleryImage, vendorId } =
       req.body;
-      console.log(req.body,"req.body");
+      console.log(req.body,"req.bodysss");
 
     const existStudio = await Studio.findOne({ vendorId: vendorId });
 
@@ -277,9 +280,39 @@ const bookingDetails = async ( req,  res ) => {
     const bookings = await  Booking.find({studio:studio._id}).populate("package").populate("studio")
       
     console.log(bookings,"bookings");
-    res.json({status:true,bookings})
+    res.json({status:true,bookings,alert:"booking confirm by you"})
   } catch (error) {
     console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+}
+
+const confirmBooking = async (req,res)=>{
+  try {
+    const { bookingId } = req.query
+    console.log(req.query);
+    const confirmBoooking = await Booking.updateOne({_id:bookingId},{$set:{status:"confirm"}})
+    res.json({status:true})
+  } catch (error) {
+     console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+}
+
+
+const RejectBooking = async (req,res)=>{
+  try {
+    const { bookingId } = req.query
+    console.log(req.query);
+    const rejectBoooking = await Booking.updateOne({_id:bookingId},{$set:{status:"reject"}})
+    console.log(rejectBoooking,"reject");
+    res.json({status:false})
+  } catch (error) {
+     console.log(error.message);
     res
       .status(500)
       .json({ updated: false, data: null, message: "Internal server error" });
@@ -312,5 +345,7 @@ module.exports = {
   getPackageList,
   postaddPackage,
   bookingDetails,
+  confirmBooking,
+  RejectBooking,
   vendorChat
 };

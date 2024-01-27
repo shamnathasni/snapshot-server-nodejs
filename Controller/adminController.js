@@ -4,11 +4,13 @@ const jwt = require("jsonwebtoken");
 const Admin = require("../Model/adminModel");
 const User = require("../Model/userModel");
 const Vendor = require("../Model/vendorModel");
+const Studio = require("../Model/studioModel");
 const Category = require("../Model/categoryModel");
 const SubCategory = require("../Model/subCategory");
 const { default: mongoose } = require("mongoose");
 const subcategory = require("../Model/subCategory");
 const bookings = require("../Model/bookingModel");
+
 
 const adminLogin = async (req, res) => {
   try {
@@ -25,7 +27,7 @@ const adminLogin = async (req, res) => {
         const token = jwt.sign(
           { adminId: existingAdmin._id },
           process.env.ADMIN_SECRET_KEY,
-          { expiresIn: "1h" }
+          { expiresIn: "1d" }
         );
 
         res.status(200).json({
@@ -143,6 +145,16 @@ const unblockvendor = async (req, res) => {
     res.status(500).json({ alert: "Internal Server Error", status: false });
   }
 };
+
+const studioList = async (req,res) => {
+  try {
+    const studio = await Studio.find({})
+    res.json({status:true,studio}).populate("vendorId")
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ alert: "Internal Server Error", status: false }); 
+  }
+}
 
 const categoryList = async (req, res) => {
   try {
@@ -330,6 +342,30 @@ const postMonthlyBookings = async (req, res) => {
   }
 };
 
+const postVendorGraph = async (req,res)=>{
+  try {
+    const vendorCount = await Vendor.countDocuments()
+    
+    console.log(vendorCount);
+    res.json({status:true,vendorCount})
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ alert: "Internal Server Error", status: false });
+  }
+}
+
+const postUserGraph = async (req,res)=>{
+  try {
+    const userCount = await User.countDocuments()
+    
+    console.log(userCount);
+    res.json({status:true,userCount })
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ alert: "Internal Server Error", status: false });
+  }
+}
+
 module.exports = {
   adminLogin,
   userList,
@@ -338,6 +374,7 @@ module.exports = {
   vendorlist,
   blockvendor,
   unblockvendor,
+  studioList,
   categoryList,
   addCategory,
   unlistCategory,
@@ -345,5 +382,7 @@ module.exports = {
   subCategoryList,
   addSubCategory,
   postConfigureBooking,
-  postMonthlyBookings
+  postMonthlyBookings,
+  postVendorGraph,
+  postUserGraph
 };
