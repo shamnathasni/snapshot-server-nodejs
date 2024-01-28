@@ -1,24 +1,24 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 const packageSchema = mongoose.Schema({
-    subcategory:{
-        type:String,
-        required:true
-    },
-    camera:{
-        type:String,
-        required:true
-    },
-    video:{
-        type:String,
-        required:true
-    },
-    both:{
-        type:String,
-        required:true
-    },
-   
-    studioId:{type:mongoose.Schema.Types.ObjectId, ref: "Studio"},
-})
+  subcategory: {
+    type: String,
+    required: true,
+  },
+  camera: {
+    type: String,
+    required: true,
+  },
+  video: {
+    type: String,
+    required: true,
+  },
+  both: {
+    type: String,
+    required: true,
+  },
 
-const package = mongoose.model("Package",packageSchema)
-module.exports = package
+  studioId: { type: mongoose.Schema.Types.ObjectId, ref: "Studio" },
+});
+
+const package = mongoose.model("Package", packageSchema);
+module.exports = package;

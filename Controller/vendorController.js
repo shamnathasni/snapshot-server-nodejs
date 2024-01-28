@@ -6,7 +6,7 @@ const Studio = require("../Model/studioModel");
 const Category = require("../Model/categoryModel");
 const subcategory = require("../Model/subCategory");
 const Package = require("../Model/packageModel");
-const Booking = require("../Model/bookingModel")
+const Booking = require("../Model/bookingModel");
 require("dotenv").config();
 
 const securePassword = async (password) => {
@@ -43,7 +43,7 @@ const vendorRegister = async (req, res) => {
       const token = jwt.sign(
         { vendorId: newVendor._id },
         process.env.VENDOR_SECRET_KEY,
-        {expiresIn:"1d"}
+        { expiresIn: "1d" }
       );
       return res.json({
         newVendor,
@@ -76,7 +76,7 @@ const vendorLogin = async (req, res) => {
         const token = jwt.sign(
           { vendorId: emailExist._id },
           process.env.VENDOR_SECRET_KEY,
-          {expiresIn:"1d"}
+          { expiresIn: "1d" }
         );
 
         res.json({
@@ -128,16 +128,14 @@ const addProfileImage = async (req, res) => {
 const vendorStudio = async (req, res) => {
   try {
     const { id } = req.query;
-    
 
     const studio = await Studio.findOne({ vendorId: id }).populate("package");
-    const studio1 = await Vendor.findOne({_id: id })
-   
+    const studio1 = await Vendor.findOne({ _id: id });
 
     if (studio) {
       res.status(200).json({ status: true, studio });
     } else {
-      res.status(200).json({ status: false, });
+      res.status(200).json({ status: false });
     }
   } catch (error) {
     console.log(error.message);
@@ -148,12 +146,9 @@ const vendorStudio = async (req, res) => {
 };
 
 const postStudioForm = async (req, res) => {
-  console.log(44);
   try {
     const { studioName, city, about, coverImage, galleryImage, vendorId } =
       req.body;
-      console.log(req.body,"req.bodysss");
-
     const existStudio = await Studio.findOne({ vendorId: vendorId });
 
     if (existStudio) {
@@ -168,7 +163,6 @@ const postStudioForm = async (req, res) => {
         galleryImage,
       });
       const newStudio = createdStudio.save();
-      console.log(newStudio,"newStudio");
 
       res.json({ alert: "studio added", status: true });
     }
@@ -203,9 +197,7 @@ const getPackageList = async (req, res) => {
 
     const vendorId = decodedToken.vendorId;
     const studio = await Studio.findOne({ vendorId: vendorId });
-    console.log(studio, "studio");
     const packageData = await Package.find({ studioId: studio._id });
-    console.log(packageData, "packageData");
     res.json({ status: true, packageData });
   } catch (error) {
     console.log(error.message);
@@ -225,17 +217,14 @@ const postaddPackage = async (req, res) => {
 
     const vendorId = decodedToken.vendorId;
 
-    const studio = await Studio.findOne({vendorId:vendorId})
+    const studio = await Studio.findOne({ vendorId: vendorId });
 
     const { localState } = req.body;
-    console.log(localState, " req.body");
-    console.log(localState.subCategoryName, " localState.subcategory");
 
     const existCategory = await Package.findOne({
-      studioId:studio._id,
+      studioId: studio._id,
       subcategory: localState.subCategoryName,
     });
-    console.log(existCategory, "existCategory");
     if (existCategory) {
       res.json({
         alert: "package already exist for this subcategory",
@@ -249,16 +238,11 @@ const postaddPackage = async (req, res) => {
         both: localState.both,
       });
 
-      
-
       const newStudio = await Studio.findOne({ vendorId: vendorId });
-      console.log(newStudio, "newStudio");
       if (newStudio) {
         newStudio.package.push(package._id);
         const newStudioPackage = await newStudio.save();
-        console.log(newStudio, "newStudio2");
-         
-        package.studioId = newStudio._id  
+        package.studioId = newStudio._id;
         const newPackage = await package.save();
         res.json({ alert: "new package added", status: true, newPackage });
       }
@@ -271,68 +255,69 @@ const postaddPackage = async (req, res) => {
   }
 };
 
-const bookingDetails = async ( req,  res ) => {
+const bookingDetails = async (req, res) => {
   try {
-    const { Id } = req.query
-    console.log( req.query,111);
-    const studio = await Studio.findOne({vendorId:Id})
-    console.log(studio,"studio");
-    const bookings = await  Booking.find({studio:studio._id}).populate("package").populate("studio")
-      
-    console.log(bookings,"bookings");
-    res.json({status:true,bookings,alert:"booking confirm by you"})
+    const { Id } = req.query;
+    const studio = await Studio.findOne({ vendorId: Id });
+    const bookings = await Booking.find({ studio: studio._id })
+      .populate("package")
+      .populate("studio");
+    res.json({ status: true, bookings, alert: "booking confirm by you" });
   } catch (error) {
     console.log(error.message);
     res
       .status(500)
       .json({ updated: false, data: null, message: "Internal server error" });
   }
-}
+};
 
-const confirmBooking = async (req,res)=>{
+const confirmBooking = async (req, res) => {
   try {
-    const { bookingId } = req.query
-    console.log(req.query);
-    const confirmBoooking = await Booking.updateOne({_id:bookingId},{$set:{status:"confirm"}})
-    res.json({status:true})
-  } catch (error) {
-     console.log(error.message);
-    res
-      .status(500)
-      .json({ updated: false, data: null, message: "Internal server error" });
-  }
-}
-
-
-const RejectBooking = async (req,res)=>{
-  try {
-    const { bookingId } = req.query
-    console.log(req.query);
-    const rejectBoooking = await Booking.updateOne({_id:bookingId},{$set:{status:"reject"}})
-    console.log(rejectBoooking,"reject");
-    res.json({status:false})
-  } catch (error) {
-     console.log(error.message);
-    res
-      .status(500)
-      .json({ updated: false, data: null, message: "Internal server error" });
-  }
-}
-
-const vendorChat = async ( req, res ) => {
-  try {
-    const { Id } = req.query
-    console.log( req.query," req.query");
-    const chat = await Booking.findOne({_id:Id},{chat:1}).populate("user")
-    console.log(chat,"chat");
-    res.json({status:true,chat})
+    const { bookingId } = req.query;
+    const confirmBoooking = await Booking.updateOne(
+      { _id: bookingId },
+      { $set: { status: "confirm" } }
+    );
+    res.json({ status: true });
   } catch (error) {
     console.log(error.message);
     res
       .status(500)
       .json({ updated: false, data: null, message: "Internal server error" });
   }
-}
+};
+
+const RejectBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.query;
+    const rejectBoooking = await Booking.updateOne(
+      { _id: bookingId },
+      { $set: { status: "reject" } }
+    );
+    res.json({ status: false });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
+
+const vendorChat = async (req, res) => {
+  try {
+    const { Id } = req.query;
+    const chat = await Booking.findOne({ _id: Id }, { chat: 1 }).populate(
+      "user"
+    );
+
+    res.json({ status: true, chat });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
 
 module.exports = {
   vendorRegister,
@@ -347,5 +332,5 @@ module.exports = {
   bookingDetails,
   confirmBooking,
   RejectBooking,
-  vendorChat
+  vendorChat,
 };

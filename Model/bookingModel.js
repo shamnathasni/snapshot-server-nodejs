@@ -15,11 +15,10 @@ const bookingSchema = mongoose.Schema({
   is_verified: {
     type: Boolean,
     default: false,
-    
   },
-  status:{
-    type:String,
-    default:"pending",
+  status: {
+    type: String,
+    default: "pending",
     required: true,
   },
   package: {

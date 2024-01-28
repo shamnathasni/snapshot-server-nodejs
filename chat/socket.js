@@ -20,17 +20,14 @@ module.exports = () => {
     console.log(`⚡: ${socket.id} user just connected!`);
 
     socket.on("join-chat", (data) => {
-      console.log(data, 111);
       socket.join(data.bookingId);
     });
 
     // Listens and logs the message to the console
     socket.on("sendMessage", async (data) => {
-      console.log(data, "message recive");
-      console.log(data.chatId,222);
+     
       try {
-        // const result = await Bookings.findOne(
-        //   { _id: data.chatId },
+    
         const result = await Bookings.updateOne(
           { _id: data.chatId },
           {
@@ -42,13 +39,13 @@ module.exports = () => {
             },
           }
          );
-        console.log(result, "rrr");
+       
       } catch (error) {
         console.log(error.message);
       }
 
       io.to(data.chatId).emit("messageResponse", data);
-      console.log(data, "data");
+   
     });
 
     socket.on("disconnect", () => {

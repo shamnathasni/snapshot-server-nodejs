@@ -1,38 +1,37 @@
 const express = require("express");
 const App = express();
-const CORS = require("cors")
+const CORS = require("cors");
 const http = require("http");
-const socketSetup = require("./chat/socket")
-
+const socketSetup = require("./chat/socket");
 
 // const server = http.createServer(App);
 const io = socketSetup();
 
-
 require("dotenv").config();
-const PORT = process.env.PORT||3000;
+const PORT = process.env.PORT || 3000;
 
-const dbConnection = require("./Config/Configurationdb")
+const dbConnection = require("./Config/Configurationdb");
 
-dbConnection()
+dbConnection();
 
-App.use(express.json())
-App.use(express.urlencoded({extended:true}))
-App.use(CORS({
-    origin:"http://localhost:5173",
-    credentials:true
-}));
+App.use(express.json());
+App.use(express.urlencoded({ extended: true }));
+App.use(
+  CORS({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
+const userRoute = require("./Routes/userRoute");
+App.use("/", userRoute);
 
-const userRoute = require("./Routes/userRoute")
-App.use("/",userRoute)
+const adminRoute = require("./Routes/adminRoute");
+App.use("/admin", adminRoute);
 
-const adminRoute = require("./Routes/adminRoute")
-App.use("/admin",adminRoute)
+const vendorRoute = require("./Routes/vendorRoute");
+App.use("/vendor", vendorRoute);
 
-const vendorRoute = require("./Routes/vendorRoute")
-App.use("/vendor",vendorRoute)
-
-App.listen(PORT,()=>{
-    console.log(` server is running on http://localhost:${PORT}`);
-})
+App.listen(PORT, () => {
+  console.log(`server is running on http://localhost:${PORT}`);
+});

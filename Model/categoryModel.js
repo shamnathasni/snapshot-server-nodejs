@@ -4,11 +4,11 @@ const categorySchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  subcategory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' }],
-  is_Verified:{
-    type:Boolean,
-    default:false
-  }
+  subcategory: [{ type: mongoose.Schema.Types.ObjectId, ref: "SubCategory" }],
+  is_Verified: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Category = mongoose.model("Category", categorySchema);
