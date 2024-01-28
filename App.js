@@ -4,7 +4,6 @@ const CORS = require("cors");
 const http = require("http");
 const socketSetup = require("./chat/socket");
 
-// const server = http.createServer(App);
 const io = socketSetup();
 
 require("dotenv").config();
@@ -17,10 +16,7 @@ dbConnection();
 App.use(express.json());
 App.use(express.urlencoded({ extended: true }));
 App.use(
-  CORS({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
+  CORS()
 );
 
 const userRoute = require("./Routes/userRoute");

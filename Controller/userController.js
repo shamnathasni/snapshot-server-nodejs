@@ -419,8 +419,8 @@ const paymentBooking = async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:5173/success?packageId=${packageId}`, // Include packageId in the URL
-      cancel_url: "http://localhost:5173/cancel",
+      success_url: `https://snapshot-studios.vercel.app/success?packageId=${packageId}`, // Include packageId in the URL
+      cancel_url: "https://snapshot-studios.vercel.app/cancel",
     });
 
     res.json({ id: session.id });
