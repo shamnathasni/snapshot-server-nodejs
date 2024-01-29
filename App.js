@@ -16,7 +16,7 @@ dbConnection();
 App.use(express.json());
 App.use(express.urlencoded({ extended: true }));
 App.use(
-  CORS()
+  CORS({credentials:true})
 );
 
 const userRoute = require("./Routes/userRoute");
