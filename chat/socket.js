@@ -53,7 +53,7 @@ module.exports = () => {
     });
   });
 
-  const PORT = process.env.SOCKET_PORT || 4000;
+  const PORT = process.env.SOCKET_PORT || 5000;
   server.listen(PORT, () => {
     console.log(`Socket.IO server listening on port ${PORT}`);
   });
