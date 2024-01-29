@@ -7,7 +7,7 @@ const socketSetup = require("./chat/socket");
 const io = socketSetup();
 
 require("dotenv").config();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 const dbConnection = require("./Config/Configurationdb");
 
