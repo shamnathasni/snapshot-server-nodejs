@@ -464,6 +464,20 @@ const confirmPayment = async (req, res) => {
         },
       }
     );
+
+    const updateAdminWallet = await Admin.updateOne(
+      { email:"Admin@gmail.com"},
+      {
+        $inc: { wallet: vendorWallet }, // Increment the wallet by the specified amount
+        $push: {
+          walletHistory: {
+            amount: AdminWallet,
+            date: new Date(),
+            from: userBooking.name,
+          },
+        },
+      }
+    );
   } catch (error) {
     console.error(error.message);
     res.status(500).send({ error: "Internal Server Error" });

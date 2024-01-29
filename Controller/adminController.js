@@ -257,38 +257,6 @@ const addSubCategory = async (req, res) => {
   }
 };
 
-const postConfigureBooking = async (req, res) => {
-  try {
-    const { packageId } = req.query;
-    //calculate wallet amount for vendor nd admin
-    const booking = await bookings
-      .findOne({ _id: packageId })
-      .populate("studio");
-    const advance = (booking.amount * (15 / 100)).toFixed(0);
-
-    const AdminWallet = (advance * (5 / 100)).toFixed(0);
-    const authAdmin = req.headers.authorization;
-    const tokenAdmin = authAdmin.split(" ")[1];
-    const decodeAdmin = jwt.verify(tokenAdmin, process.env.ADMIN_SECRET_KEY);
-    const updateAdminWallet = await Admin.UpdateOne(
-      { _id: decodeAdmin.adminId },
-      {
-        $inc: { wallet: AdminWallet }, // Increment the wallet by the specified amount
-        $push: {
-          walletHistory: {
-            amount: AdminWallet,
-            date: new Date(),
-            from: booking.studio.name,
-          },
-        },
-      }
-    );
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ alert: "Internal Server Error", status: false });
-  }
-};
-
 const postMonthlyBookings = async (req, res) => {
   try {
     const result = await bookings.aggregate([
@@ -358,7 +326,6 @@ module.exports = {
   listCategory,
   subCategoryList,
   addSubCategory,
-  postConfigureBooking,
   postMonthlyBookings,
   postVendorGraph,
   postUserGraph,

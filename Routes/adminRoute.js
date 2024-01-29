@@ -29,8 +29,6 @@ adminRoute.post(
   adminController.addSubCategory
 );
 
-adminRoute.post("/configureBooking", adminController.postConfigureBooking);
-
 adminRoute.post("/bookings-by-month", adminController.postMonthlyBookings);
 adminRoute.post("/vendorgraph", adminController.postVendorGraph);
 adminRoute.post("/usergraph", adminController.postUserGraph);
