@@ -29,6 +29,7 @@ userRoute.post("/api/create-checkout-session", userController.paymentBooking);
 userRoute.get("/confirmpayment", userController.confirmPayment);
 userRoute.get("/bookingdetails", userController.getBookingdetails);
 userRoute.get("/chatdetails", userController.getChatdetails);
+userRoute.get("/getVendorDetails", userController.getVendorDetails);
 userRoute.get("/search", userController.getSearchData);
 
 userRoute.post("/rating", userController.postRating);

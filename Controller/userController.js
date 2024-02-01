@@ -314,25 +314,22 @@ const getStudioPackages = async (req, res) => {
 
 const postBooking = async (req, res) => {
   try {
-    const { booking, type, date, Id, studioId } = req.body;
-    const auth = req.headers.authorization;
-    const token = auth.split(" ")[1];
-    const decode = jwt.verify(token, process.env.USER_SECRET_KEY);
-
+    const { booking, type, date, Id, studioId, userId } = req.body;
+   
     const newBooking = new Bookings({
       type: type,
       amount: booking,
       date: date,
       package: Id,
       studio: studioId,
-      user: decode.userId,
+      user: userId,
     });
     const bookingDetails = await newBooking.save();
     const updateBookingInUser = await User.updateOne(
-      { _id: decode.userId },
+      { _id: userId },
       { $push: { booking: bookingDetails._id } }
     );
-    const bookedUsera = await User.findOne({ _id: decode.userId });
+    const bookedUsera = await User.findOne({ _id: userId });
     res.json({
       status: true,
       alert:
@@ -419,8 +416,8 @@ const paymentBooking = async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:5173/success?packageId=${packageId}`, // Include packageId in the URL
-      cancel_url: "http://localhost:5173/cancel",
+      success_url: `https://snapshot-studios.vercel.app/success?packageId=${packageId}`, // Include packageId in the URL
+      cancel_url: "https://snapshot-studios.vercel.app/cancel",
     });
 
     res.json({ id: session.id });
@@ -432,23 +429,23 @@ const paymentBooking = async (req, res) => {
 
 const confirmPayment = async (req, res) => {
   try {
-    const { id } = req.query;
-    const booking = await Bookings.findOne({ _id: id }).populate("studio");
+    const { bookingId, userId } = req.query;
+    const booking = await Bookings.findOne({ _id: bookingId }).populate("studio");
     const advance = (booking.amount * (15 / 100)).toFixed(0);
-
     const AdminWallet = (advance * (5 / 100)).toFixed(0);
-
+    
     const vendorWallet = (advance - AdminWallet).toFixed(0);
+    console.log(advance);
+    console.log(AdminWallet);
+    console.log(vendorWallet);
 
-    const auth = req.headers.authorization;
-    const token = auth.split(" ")[1];
-    const decode = jwt.verify(token, process.env.USER_SECRET_KEY);
     const confirm = await Bookings.updateOne(
-      { _id: id },
+      { _id: bookingId },
       { $set: { is_verified: true } }
     );
-    const userBooking = await User.findOne({ _id: decode.userId });
-    userBooking.booking.push(id);
+    console.log(confirm,"confirm");
+    const userBooking = await User.findOne({ _id: userId });
+    userBooking.booking.push(bookingId);
     userBooking.save();
 
     const updateVendorWallet = await Vendor.updateOne(
@@ -466,7 +463,7 @@ const confirmPayment = async (req, res) => {
     );
 
     const updateAdminWallet = await Admin.updateOne(
-      { email:"Admin@gmail.com"},
+      { email:"admin@gmail.com"},
       {
         $inc: { wallet: vendorWallet }, // Increment the wallet by the specified amount
         $push: {
@@ -490,6 +487,7 @@ const getBookingdetails = async (req, res) => {
     const bookingdetails = await User.findOne({ _id: id }).populate({
       path: "booking",
       populate: [{ path: "studio" }, { path: "package" }],
+      options: { sort: { createdAt: -1 } }
     });
 
     res.json({ status: true, bookingdetails });
@@ -504,6 +502,17 @@ const getChatdetails = async (req, res) => {
     const { id } = req.query;
     const chatData = await Bookings.findOne({ _id: id }, { chat: 1 });
     res.json({ status: true, chatData });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+};
+
+const getVendorDetails = async (req, res) => {
+  try {
+    const { vendorId } = req.query;
+    const vendorData = await Vendor.findOne({ _id: vendorId });
+    res.json({ status: true, vendorData });
   } catch (error) {
     console.error(error.message);
     res.status(500).send({ error: "Internal Server Error" });
@@ -568,6 +577,7 @@ module.exports = {
   confirmPayment,
   getBookingdetails,
   getChatdetails,
+  getVendorDetails,
   getSearchData,
   postRating,
 };

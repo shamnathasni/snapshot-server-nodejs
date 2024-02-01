@@ -276,7 +276,7 @@ const bookingDetails = async (req, res) => {
   try {
     const { Id } = req.query;
     const studio = await Studio.findOne({ vendorId: Id });
-    const bookings = await Booking.find({ studio: studio._id })
+    const bookings = await Booking.find({ studio: studio._id }).sort({createdAt:-1})
       .populate("package")
       .populate("studio");
     res.json({ status: true, bookings, alert: "booking confirm by you" });
