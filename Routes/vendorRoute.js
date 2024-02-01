@@ -17,6 +17,7 @@ vendorRoute.post(
   uploadOptions.array("image"),
   vendorController.postStudioForm
 );
+vendorRoute.post("/uploadstudioimage",vendorController.uploadStudioImage)
 vendorRoute.get("/vendorcategory", vendorController.postvendorCategory);
 vendorRoute.get("/packageList", vendorController.getPackageList);
 vendorRoute.post("/addPackage", vendorController.postaddPackage);

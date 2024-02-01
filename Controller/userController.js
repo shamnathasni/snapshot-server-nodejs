@@ -68,8 +68,8 @@ const userRegister = async (req, res) => {
         otp,
       });
       newOtp.save();
+      res.json({ alert: "otp send into your email", status: true });
     }
-    res.json({ alert: "otp send into your email", status: true });
   } catch (error) {
     console.log(error.message);
 
@@ -419,8 +419,8 @@ const paymentBooking = async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `https://snapshot-studios.vercel.app/success?packageId=${packageId}`, // Include packageId in the URL
-      cancel_url: "https://snapshot-studios.vercel.app/cancel",
+      success_url: `http://localhost:5173/success?packageId=${packageId}`, // Include packageId in the URL
+      cancel_url: "http://localhost:5173/cancel",
     });
 
     res.json({ id: session.id });

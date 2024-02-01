@@ -14,14 +14,16 @@ const bookings = require("../Model/bookingModel");
 const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // Check if admin with the given email exists
     const existingAdmin = await Admin.findOne({ email: email });
+
     if (existingAdmin) {
-      const existingAdmin = await Admin.findOne({ email: email });
-      const passwordMatch = await Admin.findOne({
-        password: existingAdmin.password,
-      });
-      if (passwordMatch) {
-        const newAdmin = await Admin.findById(existingAdmin._id);
+      // Compare hashed passwords
+      
+
+      if (password === existingAdmin.password) {
+        // Generate JWT token
         const token = jwt.sign(
           { adminId: existingAdmin._id },
           process.env.ADMIN_SECRET_KEY,
@@ -32,7 +34,7 @@ const adminLogin = async (req, res) => {
           alert: "Login successful",
           status: true,
           token,
-          newAdmin,
+          newAdmin: existingAdmin,
         });
       } else {
         res.json({ alert: "Incorrect Password", status: false });
@@ -239,23 +241,35 @@ const subCategoryList = async (req, res) => {
 const addSubCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
-    const image = req.body.image;
-    const name = req.body.name;
+    const { image, name } = req.body;
+
     const subCat = new subcategory({
       name,
       image,
     });
+
+    // Save the subcategory to the database
     const newSubcat = await subCat.save();
+
+    // Update the category by pushing the new subcategory ID
     const pushSubcat = await Category.updateOne(
       { _id: categoryId },
-      { $push: { subcategory: { _id: newSubcat._id } } }
+      { $push: { subcategory: newSubcat._id } }
     );
-    res.json({ alert: "subcategory added successfully", status: true });
+
+    res.json({ alert: "Subcategory added successfully", status: true });
   } catch (error) {
-    console.log(error.message);
+    console.error(error.message);
+
+    // Handle specific errors if needed
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ alert: "Validation Error", status: false });
+    }
+
     res.status(500).json({ alert: "Internal Server Error", status: false });
   }
 };
+
 
 const postMonthlyBookings = async (req, res) => {
   try {

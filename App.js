@@ -7,14 +7,21 @@ const socketSetup = require("./chat/socket");
 const io = socketSetup();
 
 require("dotenv").config();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 const dbConnection = require("./Config/Configurationdb");
 
 dbConnection();
-App.use(
-  CORS()
-);
+App.use(CORS({
+  origin:"http://localhost:5173",
+  credentials:true
+}))
+// App.use(function(req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "*")
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+//   next() 
+//   })
+
 App.use(express.json());
 App.use(express.urlencoded({ extended: true }));
 

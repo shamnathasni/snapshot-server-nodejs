@@ -187,6 +187,23 @@ const postvendorCategory = async (req, res) => {
   }
 };
 
+const uploadStudioImage = async (req, res) => {
+  try {
+    const { image, studioId } = req.body;
+    console.log(req.body, "rr");
+    const studio = await Studio.findOne({ _id: studioId });  // Fix the typo here
+    studio.galleryImage.push(image);
+    studio.save();
+    res.json({ status: true });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ updated: false, data: null, message: "Internal server error" });
+  }
+};
+
+
 const getPackageList = async (req, res) => {
   try {
     const auth = req.headers.authorization;
@@ -326,6 +343,7 @@ module.exports = {
   addProfileImage,
   vendorStudio,
   postStudioForm,
+  uploadStudioImage,
   postvendorCategory,
   getPackageList,
   postaddPackage,
