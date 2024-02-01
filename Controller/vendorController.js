@@ -226,17 +226,10 @@ const getPackageList = async (req, res) => {
 
 const postaddPackage = async (req, res) => {
   try {
-    const auth = req.headers.authorization;
-    const token = auth.split(" ")[1];
+    const { localState, vendorsId } = req.body;
 
-    // Verify the token to get the vendorId
-    const decodedToken = jwt.verify(token, process.env.VENDOR_SECRET_KEY);
+    const studio = await Studio.findOne({ vendorId: vendorsId });
 
-    const vendorId = decodedToken.vendorId;
-
-    const studio = await Studio.findOne({ vendorId: vendorId });
-
-    const { localState } = req.body;
 
     const existCategory = await Package.findOne({
       studioId: studio._id,
@@ -255,7 +248,7 @@ const postaddPackage = async (req, res) => {
         both: localState.both,
       });
 
-      const newStudio = await Studio.findOne({ vendorId: vendorId });
+      const newStudio = await Studio.findOne({ vendorId: vendorsId });
       if (newStudio) {
         newStudio.package.push(package._id);
         const newStudioPackage = await newStudio.save();
