@@ -191,7 +191,7 @@ const uploadStudioImage = async (req, res) => {
   try {
     const { image, studioId } = req.body;
     console.log(req.body, "rr");
-    const studio = await Studio.findOne({ _id: studioId });  // Fix the typo here
+    const studio = await Studio.findOne({ _id: studioId }); // Fix the typo here
     studio.galleryImage.push(image);
     studio.save();
     res.json({ status: true });
@@ -203,16 +203,9 @@ const uploadStudioImage = async (req, res) => {
   }
 };
 
-
 const getPackageList = async (req, res) => {
   try {
-    const auth = req.headers.authorization;
-    const token = auth.split(" ")[1];
-
-    // Verify the token to get the vendorId
-    const decodedToken = jwt.verify(token, process.env.VENDOR_SECRET_KEY);
-
-    const vendorId = decodedToken.vendorId;
+    const { vendorId } = req.query;
     const studio = await Studio.findOne({ vendorId: vendorId });
     const packageData = await Package.find({ studioId: studio._id });
     res.json({ status: true, packageData });
@@ -230,11 +223,11 @@ const postaddPackage = async (req, res) => {
 
     const studio = await Studio.findOne({ vendorId: vendorsId });
 
-
     const existCategory = await Package.findOne({
       studioId: studio._id,
-      subcategory: localState.subCategoryName,
+      subcategory: localState.localState.subCategoryName,
     });
+
     if (existCategory) {
       res.json({
         alert: "package already exist for this subcategory",
@@ -242,18 +235,21 @@ const postaddPackage = async (req, res) => {
       });
     } else {
       const package = new Package({
-        subcategory: localState.subCategoryName,
-        camera: localState.camera,
-        video: localState.video,
-        both: localState.both,
+        subcategory: localState.localState.subCategoryName,
+        camera: localState.localState.camera,
+        video: localState.localState.video,
+        both: localState.localState.both,
       });
 
       const newStudio = await Studio.findOne({ vendorId: vendorsId });
+
       if (newStudio) {
         newStudio.package.push(package._id);
         const newStudioPackage = await newStudio.save();
+
         package.studioId = newStudio._id;
         const newPackage = await package.save();
+
         res.json({ alert: "new package added", status: true, newPackage });
       }
     }
@@ -269,7 +265,8 @@ const bookingDetails = async (req, res) => {
   try {
     const { Id } = req.query;
     const studio = await Studio.findOne({ vendorId: Id });
-    const bookings = await Booking.find({ studio: studio._id }).sort({createdAt:-1})
+    const bookings = await Booking.find({ studio: studio._id })
+      .sort({ createdAt: -1 })
       .populate("package")
       .populate("studio");
     res.json({ status: true, bookings, alert: "booking confirm by you" });
