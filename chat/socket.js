@@ -10,7 +10,7 @@ module.exports = () => {
 
   const io = socketIO(server, {
     cors: {
-      origin: "https://snapshot-studios.vercel.app", // Replace with the actual origin of your client application
+      origin: "http://localhost:5173",
       methods: ["GET", "POST","PUT","PATCH"],
       credentials: true,
     },
