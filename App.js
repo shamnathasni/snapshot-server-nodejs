@@ -13,7 +13,7 @@ const dbConnection = require("./Config/Configurationdb");
 
 dbConnection();
 App.use(CORS({
-  origin:"http://localhost:5173",
+  origin:"https://snapshot-studios.vercel.app",
   credentials:true
 }))
 // App.use(function(req, res, next) {
