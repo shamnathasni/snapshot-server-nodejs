@@ -12,15 +12,18 @@ const PORT = process.env.PORT || 3000;
 const dbConnection = require("./Config/Configurationdb");
 
 dbConnection();
+App.use(cors({
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+}))
 // App.use(CORS({
 //   origin:"https://snapshot-studios.vercel.app",  
 //   credentials:true
 // }))
-App.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*")
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-  next() 
-  })
+// App.use(function(req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "*")
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+//   next() 
+//   })
 
 App.use(express.json());
 App.use(express.urlencoded({ extended: true }));
