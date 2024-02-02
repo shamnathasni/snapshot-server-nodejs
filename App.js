@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 const dbConnection = require("./Config/Configurationdb");
 
 dbConnection();
-App.use(cors({
+App.use(CORS({
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
 }))
 // App.use(CORS({
