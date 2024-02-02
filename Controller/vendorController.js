@@ -163,8 +163,8 @@ const postStudioForm = async (req, res) => {
         galleryImage,
       });
       const newStudio = createdStudio.save();
-
       res.json({ alert: "studio added", status: true });
+
     }
   } catch (error) {
     console.log(error.message);
