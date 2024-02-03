@@ -416,8 +416,8 @@ const paymentBooking = async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `https://snapshot-studios.vercel.app/success?packageId=${packageId}`, // Include packageId in the URL
-      cancel_url: "https://snapshot-studios.vercel.app/cancel",
+      success_url: `https://snapshot.shoesplanet.online/success?packageId=${packageId}`, // Include packageId in the URL
+      cancel_url: "https://snapshot.shoesplanet.online/cancel",
     });
 
     res.json({ id: session.id });
