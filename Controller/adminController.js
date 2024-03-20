@@ -21,7 +21,6 @@ const adminLogin = async (req, res) => {
     if (existingAdmin) {
       // Compare hashed passwords
       
-
       if (password === existingAdmin.password) {
         // Generate JWT token
         const token = jwt.sign(
