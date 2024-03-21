@@ -13,15 +13,8 @@ const dbConnection = require("./Config/Configurationdb");
 
 dbConnection();
 
-// Enable CORS for all routes
-App.use(({
-  credentials: true
-}));
 
-
-
-
-// App.use(CORS())
+ App.use(CORS())
 // App.use(CORS({
 //    origin:"https://snapshot-studios.vercel.app",  
 //   credentials:true
