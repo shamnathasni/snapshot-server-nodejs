@@ -29,7 +29,7 @@ const generateOtp = () => {
   var otp = Math.random();
   otp = otp * 1000000;
   otp = parseInt(otp);
-  console.log(otp, "og");
+  console.log(otp, "ogcr");
   return otp;
 };
 
@@ -118,9 +118,9 @@ const verifyUserOtp = async (req, res) => {
 const resendUserOtp = async (req, res) => {
   try {
     const { userData } = req.body;
-    const otp = generateOtp();
-    const newOtp = await Otp.updateOne({ email: userData.email, otp });
-    const resendOTP = await Otp.findOne({ otp });
+    const resendOtp = Math.floor(9000 * Math.random())
+    const newOtp = await Otp.updateOne({ email: userData.email, otp:resendOtp });
+    const resendOTP = await Otp.findOne({ otp:resendOtp });
     const mailOption = {
       from: "shamnathasni4@gmail.com",
       to: userData.email,
