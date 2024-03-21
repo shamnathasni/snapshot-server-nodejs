@@ -12,7 +12,21 @@ const PORT = process.env.PORT || 3000;
 const dbConnection = require("./Config/Configurationdb");
 
 dbConnection();
-App.use(CORS())
+
+// Enable CORS for all routes
+App.use(({
+  origin: 'https://snapshot.shoesplanet.online',
+  credentials: true
+}));
+
+// Allow the appropriate headers
+App.use((req, res, next) => {
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  next();
+});
+
+
+// App.use(CORS())
 // App.use(CORS({
 //    origin:"https://snapshot-studios.vercel.app",  
 //   credentials:true
