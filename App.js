@@ -18,11 +18,7 @@ App.use(({
   credentials: true
 }));
 
-// Allow the appropriate headers
-App.use((req, res, next) => {
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  next();
-});
+
 
 
 // App.use(CORS())
