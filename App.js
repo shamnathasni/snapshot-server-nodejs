@@ -15,7 +15,6 @@ dbConnection();
 
 // Enable CORS for all routes
 App.use(({
-  origin: 'https://snapshot.shoesplanet.online',
   credentials: true
 }));
 
